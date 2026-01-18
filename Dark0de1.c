@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    char cmd[256];
+    char cmd[512];
     snprintf(cmd, sizeof(cmd),
-        "masscan %d.0.0.0/8 -p%s --rate %s --wait 0 2>/dev/null",
+        "masscan %d.0.0.0/8 -p%s --rate %s -oL -",
         x, PORT, RATE
     );
 
@@ -69,14 +69,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char line[256];
+    char line[512];
     while (fgets(line, sizeof(line), fp)) {
-        char *ip = strstr(line, "on ");
-        if (ip) {
-            ip += 3;
-            char *end = strchr(ip, '\n');
-            if (end) *end = '\0';
+        if (line[0] == '#') continue;
 
+        char proto[8];
+        int port;
+        char status[16];
+        char ip[64];
+
+        if (sscanf(line, "%7s %d %15s %63s", proto, &port, status, ip) == 4) {
             printf(YELLOW "%s" RESET "\n", ip);
             fprintf(out, "%s\n", ip);
             fflush(out);
